@@ -1,0 +1,71 @@
+#!/usr/bin/python
+
+import virtualenv
+import os
+import subprocess
+import stat
+
+clone_urls = {
+  'djangotoolbox':"https://github.com/django-nonrel/djangotoolbox.git",
+  'djangoappengine':"https://github.com/django-nonrel/djangoappengine.git",
+  'djangononrel':"https://github.com/django-nonrel/django-nonrel.git",
+  'djangodbindexer':"https://github.com/django-nonrel/django-dbindexer.git"}
+
+DJANGOAUTOLOAD_URL = "https://bitbucket.org/twanschik/django-autoload"
+DJANGOTESTAPP_URL = "https://github.com/django-nonrel/django-testapp.git"
+
+pjoin = os.path.join
+pexists = os.path.exists
+
+# VirtualENV related methods will be below
+def after_install(options, home_dir):
+  """
+  Make an appengine project
+  """
+  if not options.nonrel_dir:
+    os.mkdir(pjoin(home_dir,"appengine"))
+    #download the packages
+    for name,url in clone_urls.iteritems():
+      print "Cloning : ",name
+      subprocess.call(["git","clone",url,pjoin(home_dir, "appengine",name)])
+    print "Cloning : django-autoload"
+    subprocess.call(["hg","clone",DJANGOAUTOLOAD_URL,pjoin(home_dir, "appengine","djangoautoload")])
+  else:
+    #copy that stuff into homedirectory
+    subprocess.call(["cp","-R",options.nonrel_dir,pjoin(home_dir,"appengine")])
+
+  print "Cloning example application ..."
+  subprocess.call(["git","clone",DJANGOTESTAPP_URL,pjoin(home_dir,"django_testapp")])
+  
+  #now go into that directory and create the symlinks
+  os.chdir(pjoin(home_dir,"django_testapp"))
+  subprocess.call(["ln","-s",pjoin("../appengine","djangotoolbox","djangotoolbox"),"djangotoolbox"])
+  subprocess.call(["ln","-s",pjoin("../appengine","djangoappengine"),"djangoappengine"])
+  subprocess.call(["ln","-s",pjoin("../appengine","djangononrel","django"),"django"])
+  subprocess.call(["ln","-s",pjoin("../appengine","djangodbindexer","dbindexer"),"dbindexer"])
+  subprocess.call(["ln","-s",pjoin("../appengine","djangoautoload","autoload"),"autoload"])
+  
+
+
+virtualenv.after_install = after_install
+
+def adjust_options(options,args):
+  """Called before after install"""
+  #print "The options are : ",options
+
+virtualenv.adjust_options = adjust_options
+
+def extend_parser(optparse_parser):
+  """
+  Extend the parses if needed
+  """
+  optparse_parser.add_option("--nonreldir", dest="nonrel_dir",
+                             help="Place of nonrel projects directory ")
+
+
+virtualenv.extend_parser = extend_parser
+
+if __name__ == "__main__":
+  virtualenv.main()
+
+

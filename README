@@ -1,0 +1,11 @@
+That is a simple virtualenv bootstrap script that eases the setup of
+django nonrel. Just put on your $PATH and run like normal virtualenv
+command.Example:
+
+prep_nonrel nonrel
+
+Then activate your environment and go to your ready appengine directory : django_testapp
+To be able to use it properly you need to have Python Appengine SDK installed and dev_appserver.py
+should be on your $PATH.
+ 
+
